@@ -1,0 +1,569 @@
+---
+title: "A look at Madrid's Bike Sharing System with Comparaisons to New York and Montreal's systems"
+output: 
+  html_document:
+    code_folding: hide
+
+
+---
+  <style type="text/css">.main-container {
+  max-width: 700px;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: justify
+  }
+  </style>
+  
+```{r knitr_init, echo=FALSE, results="asis", cache=FALSE, include=FALSE}
+# Loading the libraries:
+library(png)
+library(jpeg)
+library(grid)
+library(igraph)
+library(data.table)
+library(geosphere)
+library(igraph)
+library(dplyr)
+library(lubridate)
+
+```
+
+
+
+\
+\
+The following Social Network Analysis is the summary report that includes all the information to reproduce our work.
+```{r fig.align="center", echo=TRUE}
+img1 <- readJPEG("/Users/mohamedkhanafer/Desktop/bicimaddd.jpg")
+grid.raster(img1)
+
+```
+
+\
+\
+
+### 1. Introduction
+
+
+
+With the high increase in bicycle sharing systems in most large cities around the world, we found it interesting to analyze and compare some of the best established ones. We here use a different approach that would ususally be applied on such data. Indeed, we use a Network Analysis to try finding insights
+
+In our project, we focus on turning bike trips into  networks that we can analyze. Thus throughout the study, we established networks in which the nodes are the bike stations throughout the city, and the edges are the flows pf the trips in each direction between the stations. And the edges are weighted by the number of trips carried out by the bikes on that edge. 
+
+The goal of this research would be to try finding similarities and differences in the networks of these cities' systems as well as finding interesting patterns within each city. 
+
+The different cities analyzed here are Montreal, New York, and Madrid which respectively started operating those bicycle sharing systems in 2009, 2013, and 2014.
+
+\
+
+### 2. About the tools used 
+
+For our analysis, we combined outputs from various tools. Namely:
+
+- R for the analysis and the report in a Markdown format;
+- Python for data transformation;
+- Gephi for the visualizations of our networks;
+- FlowingBlue for maping the networks on mapped backgrounds.
+
+\
+
+### 3. About the main ressources consulted
+
+Throughout this analysis, we consulted many ressources and accumulated some inspiration from here and there. The main ones are the following:
+
+- For the preliminary analysis, we mainly used the course scripts and a great course from DataCamp from which we use many functions and approaches:
+https://learn.datacamp.com/courses/case-studies-network-analysis-in-r
+
+- For the visualization in Gephi, we mainly used:
+http://gephi.michalnovak.eu/Mastering%20Gephi%20Network%20Visualization.pdf
+
+- For the community detection, we combined the knowledge from:
+  https://www.sciencedirect.com/science/article/pii/S2405896317325284
+
+  https://arxiv.org/pdf/1804.05584.pdf
+
+  https://www.kernix.com/article/community-detection-in-social-networks/
+
+\
+
+### 4. About the data used
+
+As mentionned above, we used the data for 3 cities, each city provided the information in different ways and thus the preparation for the data was different in each cases. 
+Most of the data preparation has been done in Python before using R for the analysis. We here provide the steps followed for each city's data. The Python code is available in the submitted documents with the intermmediary and final datasets as well.
+
+Note that we used data for the month of June 2019 for the 3 cities to make sure our comparison is the least biased possible.
+
+The data can be found here: https://we.tl/t-pEYMo5DTZ3
+\
+
+### 4.1 Madrid Data 
+
+
+#### 4.1.1 Data for the stations:
+The EMT Madrid open data provides information on trips and stations. The stations information are timestamp data on the activities of the station at each time interval. From this file we extracted the stations and made sure all the stations present in the trips were present in the stations file as well. 
+This data can be found here:https://opendata.emtmadrid.es/Datos-estaticos/Datos-generales-(1)
+We then used this interactive map to get insights on the stations themselves which helped us better understand the data on hand: https://data-crtm.opendata.arcgis.com/datasets/bases-bicimad
+
+#### 4.1.2 Data for the trips:
+We used the same source as the one mentionned above, and did the transformations in the Python file. The transformations we did were mainly to get a Source and Target station with weights that represented the trips between the stations. We provide both these processed files in the data folder.
+
+\
+
+### 4.2 Montreal Data 
+
+
+#### 4.2.1 Data for the stations:
+We downloaded the data from Kaggle, made available by the user JackyWang (available at: https://www.kaggle.com/jackywang529/bixi-montreal-bikeshare-data). He concatinated the data from the source open data website: https://montreal.bixi.com/en/open-data. The station files were already provided and thus we used the file for the stations in 2019.
+
+#### 4.2.2 Data for the trips:
+In the same datasets provided from Kaggle, we took the data for June 2019  and did the transformations in the Python file. The transformations we did were mainly to get a Source and Target stations with weights that represented the trips between the stations. We provide both these processed files in the data folder.
+
+\
+
+### 4.3 New York Data
+
+#### 4.3.1 Data for the stations:
+We downloaded the data from https://www.citibikenyc.com/system-data, which provides data on trips since 2013. Here, the files for the stations and for the trips were not separated. The stations data was combined with the trips one. From the June 2019 data, we thus extracted the stations names, geolocalisation data, and id. We looked for the distinct ones in starting and ending stations to make sure we captured all the available stations. The transformations can be found in the Python file.
+
+#### 4.3.2 Data for the trips:
+In the same way as Madrid and Montreal, the transformations we did were mainly to get a Source and Target stations with weights that represented the trips between the stations. We provide both these processed files in the data folder.
+
+\
+
+### 5. Starting with some graphs to get an intuition
+
+After testing various plots in R, Gephi, and Flowmap, we concluded that the best way to visualize the networks would be to map the in, out, and overall the degrees on the same graph using Flowmap. These were the graph giving us the best insights and availability for comparison. We later on in the next section show the computations of these and other central measures.
+
+To be able to compare the graphs and reduce bias, we used the month of June 2019 for each city.
+
+\
+
+#### 5.1 The maps of the degrees for the 3 cities
+
+The datasets used were built in Python and we uploaded them to Flowmap.
+
+The links to the interactive maps are:
+
+Madrid:https://flowmap.blue/1ICXKvFfMd3jDKvJTbpprm1JW3w2lOP_bMoIdpgMwWtE?v=40.423190,-3.694299,12.13,0,0&a=0&b=1&bo=75&c=0&d=0&lt=1&lfm=ALL&col=DarkMint&f=50
+
+New York:https://flowmap.blue/1NKYn1fEw0qe7biOgdMlzXXGDjhpeSpLd51J8DhXFeQY?v=0.000000,0.000000,1.71,0,0&a=0&b=1&bo=75&c=0&d=0&lt=1&lfm=ALL&col=DarkMint&f=50
+
+Montreal:https://flowmap.blue/1APu7yHTPZg6j0c8ggbj09ViGseqnvN-TDUEO31WVIqA?v=45.509453,-73.602573,11.02,0,0&a=0&b=1&bo=75&c=0&d=0&lt=1&lfm=ALL&col=DarkMint&f=50
+```{r fig.align="center", echo=TRUE}
+img <- readPNG("/Users/mohamedkhanafer/Desktop/Graphs/Markdown/comparison.png")
+grid.raster(img)
+```
+
+The first insight, we believe, from the graph is the obvious central focus point for Montreal and New York while Madrid's important nodes are more widespread with no clear center. These attributes will be further highlighted in the upcoming analysis.
+
+\
+
+#### 5.2 Madrid over the years
+How has Madrid's network evolved over the years? We here plotted the data of the 3 networks over the years to see the evolution of the network and maybe get an insight from it.
+
+```{r  fig.align="center", echo=TRUE}
+img1 <- readPNG("/Users/mohamedkhanafer/Desktop/Graphs/Markdown/madrid 3years.png")
+grid.raster(img1)
+```
+
+Already from the data, we noticed a decrease in the edges for Madrid. And this is clearly evident from the graphs of the network. We have a reduced amount of weight from year to year (again here we are using for each year the data for the months of June 2017).
+
+\
+
+#### 5.2 A comparison to Montreal over the years
+To see if this pattern is similar or different in other already established systems, we also looked at the change of the network for Montreal from June 2016 to June 2019.
+
+```{r fig.align="center", echo=TRUE}
+img2 <- readPNG("/Users/mohamedkhanafer/Desktop/Graphs/Markdown/Montreal4years.png")
+grid.raster(img2)
+```
+
+We can clearly see an opposite trend here with increasing weights in the edges of the graph. And another interesting trend is the expansion of the network to further locations.
+\
+
+### 6. Going back to the calculations and preliminary analysis 
+
+As mentionned above, we used the course scripts and Datacamp for the following analysis
+\
+
+#### 6.1 Exploration of the datasets
+
+Each row in the dataset is an individual trip with source and target stations and also some metadata about the trips. We decided to use the number of trips between stations for our weights after testing different approached and concluding it was the most representative one (note that other approaches included taking as weights the average trip time or maybe the age of the user, but they seemed less intuitive).
+
+```{r fig.align="center", echo=TRUE}
+data_mad<- read.csv("/Users/mohamedkhanafer/Desktop/Datasets SNA/madrid_data_for_r.csv")
+edges_mad <- data_mad %>%group_by(idplug_station, idunplug_station) %>%summarize(weights=n())
+edges_graph_mad<-graph_from_data_frame(edges_mad[,1:2])
+# Adding the edge weights:
+E(edges_graph_mad)$weight <- edges_mad$weights
+# Quick exploration of the graph:
+gsize(edges_graph_mad)
+gorder(edges_graph_mad)
+```
+We see that we have a very dense graph with 29,102 edges and 180 nodes. We can try to see how the graph would look like to get an intuition about the data we are dealing with:
+
+```{r fig.align="center", echo=TRUE}
+#ploting data with 20 nodes in a subgraph to get intuition on the graphs we will have:
+sg<-induced_subgraph(edges_graph_mad, 1:20)
+plot(sg, vertex.label = NA, edge.arrow.width = 0.1, edge.arrow.size = 0.1,
+     margin = 0, vertex.size=6, edge.width=log(E(sg)$weight +2))
+
+```
+
+We can compare and see how for example the graph for New York would look like:
+
+```{r fig.align="center", echo=TRUE}
+data_NY<- read.csv("/Users/mohamedkhanafer/Desktop/Datasets SNA/New York/Raw Data/201906-citibike-tripdata.csv")
+edges_NY <- data_NY %>%group_by(idplug_station, idunplug_station) %>%summarize(weights=n())
+edges_praph_NY<-graph_from_data_frame(edges_NY[,1:2])
+E(edges_praph_NY)$weight <- edges_NY$weights
+gsize(edges_praph_NY)
+gorder(edges_praph_NY)
+sg<-induced_subgraph(edges_praph_NY, 1:20)
+plot(sg, vertex.label = NA, edge.arrow.width = 0.1, edge.arrow.size = 0.1,
+     margin = 0, vertex.size=6, edge.width=log(E(sg)$weight +2))
+
+```
+We clearly see that New York has a denser network with 4 times as many nodes and more than 5 times the number of edges for the same month of June 2016.
+We also here can see from the subgraph that New York's graph looks to be wider with less concentration on few stations. We will re-observe this behavior later on.
+
+Another interesting factor is the self loops that both graphs exhibit. We will find various explanations for thos loops in a section down.
+
+To complete this preliminary exploration, we look at Montreal too just to have the full picture:
+\
+```{r fig.align="center", echo=TRUE, fig.height=7}
+data_mont<- read.csv("/Users/mohamedkhanafer/Desktop/Datasets SNA/Montreal/Raw Data/OD_2019-06.csv")
+edges_mont <- data_mont %>%group_by(idplug_station, idunplug_station) %>%summarize(weights=n())
+edges_graph_mont<-graph_from_data_frame(edges_mont[,1:2])
+E(edges_graph_mont)$weight <- edges_mont$weights
+gsize(edges_graph_mont)
+gorder(edges_graph_mont)
+sg<-induced_subgraph(edges_graph_mont, 1:20)
+plot(sg, vertex.label = NA, edge.arrow.width = 0.1, edge.arrow.size = 0.1,
+     margin = 0, vertex.size=6, edge.width=log(E(sg)$weight +2))
+
+
+```
+
+Montreal's system is even wider and looks more interesting. This is the same pattern observed in the graphs above.
+
+\
+
+#### 6.2 A more in-depth look at Madrid
+
+Here we focus on Madrid, to get some more information about its network.
+
+```{r fig.align="center", echo=TRUE}
+# Assigning nodes and edges
+df_bike_edges = fread('/Users/mohamedkhanafer/Desktop/Datasets SNA/Madrid/Data for R/madrid_trips.csv',header=T)
+df_bike_nodes = fread('/Users/mohamedkhanafer/Desktop/Datasets SNA/Madrid/Data for R/madrid_nodes.csv',  header = T)
+
+# Converting these two datasets into a network object 
+g_madrid = graph_from_data_frame(d=df_bike_edges, vertices=df_bike_nodes, directed=T) 
+```
+\
+
+
+#### 6.2.1 Degree distribution
+
+We look here as if the graph was undirected:
+```{r}
+degall <- degree(g_madrid, mode="all")
+hist(degall, main="Histogram of node degree")
+mean(degall)
+sd(degall)
+```
+We can see that most stations have the same number of degrees, and so a well balanced network without much differences in the stations trips.
+\
+The histogram of the frequencies od the in-degree looks like:
+```{r}
+degi<-degree(g_madrid, mode="in")
+hist(degi, main="Histogram of node degree")
+mean(degi)
+sd(degi)
+```
+
+
+ \
+
+And for the out-degrees:
+```{r}
+dego<-degree(g_madrid, mode="out")
+hist(dego, main="Histogram of node degree")
+mean(dego)
+sd(dego)
+```
+We see a similar pattern in the in and out-degrees.
+\
+
+#### 6.2.2 Network length and transitivity
+
+The Network Diameter and Average Path Length is: 
+```{r}
+diameter(g_madrid,directed = T)
+mean_distance(g_madrid,directed = T)
+```
+
+For the Clusterting coefficient:
+```{r}
+transitivity(g_madrid,type=c("global"),weights=NULL)
+```
+We see a highly transitive graph with a high clustering coefficient close to 1. Which again proves the high connectivity of our network.
+
+#### 6.2.3 Comparing according to centrality measures
+And finally looking at the centrality measures for the nodes:
+```{r}
+degall <- degree(g_madrid, mode="all")
+bet.a <-betweenness(g_madrid)
+close.a <-closeness(g_madrid)
+
+centrality.stations <- cbind(degall, bet.a, close.a)
+centrality.stations <- as.data.frame(centrality.stations)
+centrality.stations <- setDT(centrality.stations, keep.rownames = TRUE)[]
+centrality.stations <- as.data.table(centrality.stations)
+
+#Looking at the 
+centrality.stations[order(centrality.stations$degall, decreasing = T),][1:10]
+```
+\
+
+Looking now at the stations with the highest betweeness:
+```{r fig.align="center", echo=TRUE}
+centrality.stations[order(centrality.stations$bet.a, decreasing = T),][1:10]
+
+```
+
+\
+And the ones for closeness:
+```{r fig.align="center", echo=TRUE}
+centrality.stations[order(centrality.stations$close.a, decreasing = T),][1:10]
+```
+
+
+We can say that all the centrality measures point to the same stations in general. The same stations are central to the network, that is why we used the degrees for comparison.
+
+To see if a similar behavior is found in other systems, we look at Montreal next.
+
+\
+
+#### 6.3 A more in-depth look at Montreal
+
+Here we focus on Montreal, to be able to compare it to Madrid.
+
+```{r fig.align="center", echo=TRUE}
+library(igraph)
+library(dplyr)
+library(lubridate)
+# Assigning nodes and edges
+df_bike_edges2 = fread('/Users/mohamedkhanafer/Desktop/Datasets SNA/Flowmap/MONT_2019.csv',header=T)
+df_bike_nodes2 = fread('/Users/mohamedkhanafer/Desktop/Datasets SNA/Montreal/Raw Data/Stations_2019.csv',  header = T)
+
+# Converting these two datasets into a network object 
+g_mont = graph_from_data_frame(d=df_bike_edges2, vertices=df_bike_nodes2, directed=T) 
+```
+\
+
+
+#### 6.3.1 Degree distribution
+
+We look here at the degrees distribution:
+```{r}
+degall2 <- degree(g_mont, mode="all")
+hist(degall2, main="Histogram of node degree")
+mean(degall2)
+sd(degall2)
+```
+We can see a more normally distributed graph as opposed to the Madrid one.
+\
+
+#### 6.3.2 Network length and transitivity
+
+The Network Diameter and Average Path Length is: 
+```{r}
+diameter(g_mont,directed = T)
+mean_distance(g_mont,directed = T)
+```
+Much larger than the two measures for Madrid.
+
+For the Clusterting coefficient:
+```{r}
+transitivity(g_mont,type=c("global"),weights=NULL)
+```
+We see a less transitive graph with a high clustering coefficient of 0.6. Which is also highlighted in the first graph.
+
+#### 6.3.3 Comparing according to centrality measures
+And finally looking at the centrality measures for the nodes:
+```{r}
+degall2 <- degree(g_mont, mode="all")
+bet.a2 <-betweenness(g_mont)
+close.a2 <-closeness(g_mont)
+
+centrality.stations2 <- cbind(degall2, bet.a2, close.a2)
+centrality.stations2 <- as.data.frame(centrality.stations2)
+centrality.stations2 <- setDT(centrality.stations2, keep.rownames = TRUE)[]
+centrality.stations2 <- as.data.table(centrality.stations2)
+
+#Looking at the 
+centrality.stations2[order(centrality.stations2$degall2, decreasing = T),][1:10]
+```
+\
+
+Looking now at the stations with the highest betweeness:
+```{r fig.align="center", echo=TRUE}
+centrality.stations2[order(centrality.stations2$bet.a2, decreasing = T),][1:10]
+
+```
+
+\
+And the ones for closeness:
+```{r fig.align="center", echo=TRUE}
+centrality.stations2[order(centrality.stations2$close.a2, decreasing = T),][1:10]
+```
+
+For the centrality measures, we see different stations appearing in the top 10 according to the measure used. This makes sense given the wider and more diversified network of Montreal.
+\
+\
+
+### 7. What can the types of users tell 
+We looked at the user types and if their behaviors could vary in a graph.
+In the dataset, we have 4 types of users::
+0: undetermined; 1: annual_pass; 2: occasional_user; 3: bicimad_employee. 
+
+```{r fig.align="center", echo=TRUE}
+
+#undetermined users
+undetermined <-data_mad %>% filter(user_type==0)
+n_undetermined_trips <- nrow(undetermined)
+undetermined_edges_graph_madraph <- undetermined %>% 
+  group_by(idplug_station, idunplug_station) %>% 
+  summarize(weights = n() / n_undetermined_trips) %>%
+  graph_from_data_frame()
+
+# annual_pass users
+annual_pass <- data_mad %>% filter(user_type == 1)
+n_annual_pass_trips <- nrow(annual_pass)
+annual_pass_edges_graph_madraph <- annual_pass %>% 
+  group_by(idplug_station, idunplug_station) %>% 
+  summarize(weights = n() / n_annual_pass_trips) %>%
+  graph_from_data_frame()
+
+# occasional_user users
+occasional_user <- data_mad %>% filter(user_type == 2)
+n_occasional_user_trips <- nrow(occasional_user)
+occasional_user_edges_graph_madraph <- occasional_user %>% 
+  group_by(idplug_station, idunplug_station) %>% 
+  summarize(weights = n() / n_occasional_user_trips) %>%
+  graph_from_data_frame()
+
+# bicimad_employee users
+bicimad_employee <- data_mad %>% filter(user_type == 3)
+n_bicimad_employee_trips <- nrow(bicimad_employee)
+bicimad_employee_edges_graph_madraph <- bicimad_employee %>% 
+  group_by(idplug_station, idunplug_station) %>% 
+  summarize(weights = n() / n_bicimad_employee_trips) %>%
+  graph_from_data_frame()
+
+```
+
+The following plotting of graphs was running properly in our R script but for some reason not in the markdown, we thus provide the code and the supposed output below:
+```{r fig.align="center", echo=TRUE}
+# # The subgraph for users of the first 20 nodes
+# twenty_annual_pass_edges_graph_madraph <- induced_subgraph(annual_pass_edges_graph_madraph,1:20)
+# twenty_occasional_user_edges_graph_madraph <- induced_subgraph(occasional_user_edges_graph_madraph,1:20)
+# twenty_bicimad_employee_edges_graph_madraph <- induced_subgraph(bicimad_employee_edges_graph_madraph,1:20)
+# # Ploting the subgraphs
+# plot(twenty_annual_pass_edges_graph_madraph, main = "Annual pass users", vertex.label = NA, edge.arrow.width = 0.1, edge.arrow.size = 0.1,
+#      margin = 0, vertex.size=6, edge.width=log(E(sg)$weight +2))
+# plot(twenty_occasional_user_edges_graph_madraph, main = "Occasional users", vertex.label = NA, edge.arrow.width = 0.1, edge.arrow.size = 0.1,
+#      margin = 0, vertex.size=6, edge.width=log(E(sg)$weight +2))
+# plot(twenty_bicimad_employee_edges_graph_madraph, main = "BiciMad employees", vertex.label = NA, edge.arrow.width = 0.1, edge.arrow.size = 0.1,
+#      margin = 0, vertex.size=6, edge.width=log(E(sg)$weight +2))
+
+```
+
+```{r fig.align="center", echo=TRUE}
+img2 <- readPNG("/Users/mohamedkhanafer/Desktop/Graphs/Markdown/users type.png")
+grid.raster(img2)
+```
+
+The insights we could get are:
+- The annual pass users are most probably regular users, the locals, and certainly travel to more far away parts of the graph. 
+- The occasional users are most probably tourists or maybe locals who don't usually bike (with use most probably centered in major stations, and they might ride more for leisure in some of the main touristic places of the city like in the center)
+- The BiciMAd employees are most probably the ones doing maintenance of the bikes that is why we see the self loops (we will analyze their structure in the next section)
+
+For a better visualization, we run those graphs in Gephi:
+
+```{r fig.align="center", echo=TRUE}
+img3 <- readPNG("/Users/mohamedkhanafer/Desktop/Graphs/Markdown/users types Gephi.png")
+grid.raster(img3)
+```
+
+
+### 8. Community Detection 
+
+The community detection techniques helps us in reducing the complexity of the network to a degree that allows us to better understand the underlying structure of the network.
+
+We ran our community detection in Gephi using various algorithms. The most significant one that gave us the best clusters we could make sense out of was the Louvain algorithm. We comment those results here:
+
+#### 8.1 Madrid: no clear cuts
+
+```{r fig.align="center", echo=TRUE}
+img3 <- readPNG("/Users/mohamedkhanafer/Desktop/Graphs/Markdown/community madrid1.png")
+grid.raster(img3)
+```
+
+```{r fig.align="center", echo=TRUE}
+img4 <- readPNG("/Users/mohamedkhanafer/Desktop/Graphs/Markdown/community madrid 2.png")
+grid.raster(img4)
+```
+We can clearly see that there was no community that could be easily identified in the Madrid graph. All clusters represent around 1.5% of the data and exhibit similar behaviors. This is not the case for the other two cities:
+
+#### 8.2 Montreal and New York: clearer defined clusters
+
+The communities for New York looked like this:
+```{r fig.align="center", echo=TRUE}
+img5 <- readPNG("/Users/mohamedkhanafer/Desktop/Graphs/Markdown/new york community.png")
+grid.raster(img5)
+```
+
+And the communities for Montreal:
+```{r fig.align="center", echo=TRUE}
+img6 <- readPNG("/Users/mohamedkhanafer/Desktop/Graphs/Markdown/montreal community.png")
+grid.raster(img6)
+```
+We can clearly see define clusters. And knowing we are dealing with geographical data, it makes sense to interpret those clusers looking at them on a geographical map as well:
+
+```{r fig.align="center", echo=TRUE}
+img6 <- readPNG("/Users/mohamedkhanafer/Desktop/Graphs/Markdown/clusters montreal.png")
+grid.raster(img6)
+```
+
+We can clearly see that Montreal has those defined clusters that could be tied up to the characteristics of the regions and neighborhoords. 
+This is an aspect Madrid's system lacks and could get inspired from.
+\
+
+
+### 9 A final note on self loops 
+\
+We decided to make an analysis based on self-loops after identifying that their weighted value in each city was 3 to 5 times more than the other edges, meaning that on the three cities there is a pattern of bike usage on the same station.
+
+After identifying this pattern, we mapped the most important edges taking into account the average weight and those who had above the mean weight of self-loops and where were they located. 
+
+And how is the engine capacity distributed when it comes to CO2 emissions?
+```{r fig.align="center", echo=TRUE}
+img7 <- readPNG("/Users/mohamedkhanafer/Desktop/Graphs/Markdown/self loops.png")
+grid.raster(img7)
+```
+After analyzing the three cities we can clearly see a pattern on location regarding New York and Montreal. 
+In New York the nodes with the highest weight are located between the most important parks and the Federal District, displaying a clear planification of the bike stations targeting maybe tourists and people working on Federal District and going to lunch or for a ride, to prove this theory an hourly analysis would be recommended. 
+
+Madrid´s Self Loops don’t have a clear pattern, only 11 stations that are near Retiro Park. We recommend rethinking the station strategy to increase total rides, not only rides around Parks or offices, although for a marketing strategy would be beneficiary to recruit new users and increase rides with current users. 
+```{r fig.align="center", echo=TRUE}
+img8 <- readPNG("/Users/mohamedkhanafer/Desktop/Screen Shot 2020-03-12 at 11.47.31 PM.png")
+grid.raster(img8)
+```
+
+### 10. Concluding remarks 
+
+Through this Social Network Analysis, we were able to clearly highlight the differences between the bike sharing systems of more established cities like New York and Montreal as compared to Madrid. The insights here could be beneficial for Madrid to improve its system and tackle the decline in use we've highlighted over the years.
+
