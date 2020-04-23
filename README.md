@@ -22,7 +22,7 @@ We also look at specific aspects of the bike systems and try to come up with ins
 
 ![Madrid's users; behaviors](/1_Madrid_Montreal_NY_bikes/graphs/madrid_users.png)
 
-This project was made possible with the help of my colleague Begoña Frigolet. I here share the final results of the project in an R markdown format as well as in an HTML format. The tools used for the project are the following:
+This project was made possible with the help of my colleague Begoña Frigolet. The tools used for the project are the following:
 
 - R for the analysis and the report in a Markdown format;
 - Python for data transformation;
