@@ -29,6 +29,6 @@ This project was made possible with the help of my colleague Begoña Frigolet. I
 - Gephi for some of the visualizations of our networks;
 - FlowingBlue for maping the networks on mapped backgrounds.
 
-To be able to reproduce most of the work, you will just need to dowload the data from the sources mentionned in the report. To be able to reproduce the maps on FlowingBlue, you can take a look at my other repository (FlowMap) in which I extensively explain how to use this tool. I here attach the Python notebook for the data preparation, the R markdown, the HTML report, as well as a short PDF presentation used to explain the project.
+To be able to reproduce most of the work, you will just need to dowload the data from the sources mentionned in the report. To be able to reproduce the maps on FlowingBlue, you can take a look at my other repository (FlowMap) in which I extensively explain how to use this tool. I here attach the Python notebook for the data preparation, the R markdown, as well as the final HTML report.
 
 
